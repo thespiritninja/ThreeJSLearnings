@@ -1,7 +1,12 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import gsap from 'gsap'
+import GUI from 'lil-gui'
 
+// Instantiate GUI
+const gui = new GUI()
+//Declaring a debugObject dict
+const debugObject  = {}
 /**
  * Base
  */
@@ -15,10 +20,54 @@ const scene = new THREE.Scene()
  * Object
  */
 const geometry = new THREE.BoxGeometry(1, 1, 1, 2, 2, 2)
-const material = new THREE.MeshBasicMaterial({ color: '#ff0000' })
+const material = new THREE.MeshBasicMaterial({ color: '#9999ff' })
 const mesh = new THREE.Mesh(geometry, material)
 scene.add(mesh)
+//Adding Range debug
+const tweakCube = gui.addFolder('Tweak Cube')
+tweakCube
+    .add(mesh.scale, 'y')
+    .min(1)
+    .max(5)
+    .step(0.05)
+    .name('scaleY')
 
+//Adding Boolean Debug
+tweakCube
+    .add(mesh,'visible')
+tweakCube
+    .add(mesh.material, 'wireframe')
+
+//Adding Color Debug
+tweakCube
+    .addColor(mesh.material, 'color')
+    .onChange((colorChanged)=>{
+        // console.log(colorChanged.getHexString())
+    })
+debugObject.spin = () =>{
+    gsap.to(mesh.rotation, { y: mesh.rotation.y + Math.PI * 2})
+}
+
+tweakCube
+    .add(debugObject, 'spin')
+
+debugObject.subdivisions = 2
+tweakCube
+    .add(debugObject,'subdivisions')
+    .min(1)
+    .max(10)
+    .step(1)
+    .onFinishChange(()=>{
+        mesh.geometry.dispose()
+        mesh.geometry = new THREE.BoxGeometry(1,1,1,
+            debugObject.subdivisions, debugObject.subdivisions, debugObject.subdivisions)
+    })
+
+window.addEventListener('keydown', (e)=>{
+    if(e.key == 'h'){
+        gui.show(gui._hidden)
+    }
+})
 /**
  * Sizes
  */
@@ -27,8 +76,7 @@ const sizes = {
     height: window.innerHeight
 }
 
-window.addEventListener('resize', () =>
-{
+window.addEventListener('resize', () => {
     // Update sizes
     sizes.width = window.innerWidth
     sizes.height = window.innerHeight
@@ -70,8 +118,7 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
  */
 const clock = new THREE.Clock()
 
-const tick = () =>
-{
+const tick = () => {
     const elapsedTime = clock.getElapsedTime()
 
     // Update controls
